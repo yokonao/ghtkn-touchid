@@ -21,6 +21,8 @@ brew install yokonao/ghtkn-touchid/ghtkn-touchid
 
 To build from a checkout instead, run `make build` and `make test`, then `./install.sh` to write both binaries to `~/.local/bin`. The installer is optional, but keep the two binaries together in one directory: the reset grants Keychain access to the pair it finds beside itself, so moving them afterward makes macOS ask for permission until the reset runs again.
 
+`make test-integration` drives a real, isolated `ghtkn agent` through the actual unlock protocol (Keychain and Touch ID are not involved); run it after bumping the pinned ghtkn/SDK version, with `ghtkn` available in `PATH`.
+
 ## Unlock
 
 ```sh

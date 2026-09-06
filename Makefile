@@ -15,8 +15,9 @@ CORE = Sources/Base.swift Sources/PassphraseStore.swift
 UNLOCK = $(CORE) Sources/AgentClient.swift Sources/UnlockMain.swift
 RESET = $(CORE) Sources/PassphraseReset.swift Sources/ResetPTY.swift Sources/ResetMain.swift
 TEST = $(CORE) Sources/AgentClient.swift Sources/ResetPTY.swift Sources/ResetMain.swift Tests/TestMain.swift
+INTEGRATION = $(CORE) Sources/AgentClient.swift Sources/ResetPTY.swift Tests/IntegrationTestMain.swift
 
-.PHONY: all build test
+.PHONY: all build test test-integration
 
 all: build
 
@@ -34,8 +35,15 @@ $(BUILD_DIR)/ghtkn-touchid-tests: Makefile $(TEST)
 	@mkdir -p $(@D)
 	$(SWIFTC) $(FLAGS) -Onone -D TESTING -D UNIT_TESTING $(TEST) -o $@
 
+$(BUILD_DIR)/ghtkn-touchid-integration: Makefile $(INTEGRATION)
+	@mkdir -p $(@D)
+	$(SWIFTC) $(FLAGS) -Onone $(INTEGRATION) -o $@
+
 test: build $(BUILD_DIR)/ghtkn-touchid-tests
 	$(BUILD_DIR)/ghtkn-touchid-tests
 	@if strings $(BUILD_DIR)/ghtkn-touchid $(BUILD_DIR)/ghtkn-touchid-reset | grep -q GHTKN_TOUCHID_TEST; then \
 		echo "test-only authentication override found in a production binary" >&2; exit 1; \
 	fi
+
+test-integration: $(BUILD_DIR)/ghtkn-touchid-integration
+	$(BUILD_DIR)/ghtkn-touchid-integration

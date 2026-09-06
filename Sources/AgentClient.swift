@@ -76,7 +76,7 @@ enum AgentClient {
       .appendingPathComponent(".cache/ghtkn/agent.sock").path
   }
 
-  private static func send(_ request: AgentRequest) throws -> AgentResponse {
+  static func send(_ request: AgentRequest) throws -> AgentResponse {
     var data = request.encoded()
     defer { data.resetBytes(in: 0..<data.count) }
 
