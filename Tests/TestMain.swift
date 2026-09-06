@@ -35,8 +35,8 @@ enum TestMain {
     try check(
       (object?["refresh_token_ttl"] as? NSNumber)?.int64Value == 604_800_000_000_000,
       "refresh TTL")
-    let query = PassphraseStore.query(service: "test")
-    try check(query[kSecUseDataProtectionKeychain as String] as? Bool == true, "data protection Keychain")
+    let query = try PassphraseStore.query(service: "test")
+    try check(query[kSecUseKeychain as String] != nil, "default Keychain")
   }
 
   private static func testAlreadyUnlockedSkipsKeychain() throws {

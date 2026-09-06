@@ -1,5 +1,4 @@
 import Foundation
-import LocalAuthentication
 import Security
 
 struct StoredPassphrase {
@@ -23,12 +22,12 @@ enum PassphraseStore {
   static let account = NSUserName()
 
   static func loadCandidates() throws -> [StoredPassphrase] {
-    let context = try TouchID.authenticate(reason: "Unlock the ghtkn agent")
+    try TouchID.authenticate(reason: "Unlock the ghtkn agent")
     var candidates = [StoredPassphrase]()
     var firstError: Error?
     for service in [committedService, activeService, pendingService] {
       do {
-        if let data = try read(service: service, context: context) {
+        if let data = try read(service: service) {
           candidates.append(StoredPassphrase(service: service, data: data))
         }
       } catch {
@@ -42,21 +41,26 @@ enum PassphraseStore {
     return candidates
   }
 
-  static func query(service: String, context: LAContext? = nil) -> [String: Any] {
-    var query: [String: Any] = [
+  static func defaultKeychain() throws -> SecKeychain {
+    var keychain: SecKeychain?
+    let status = SecKeychainCopyDefault(&keychain)
+    guard status == errSecSuccess, let keychain else {
+      throw keychainError("open the default Keychain", status)
+    }
+    return keychain
+  }
+
+  static func query(service: String) throws -> [String: Any] {
+    [
       kSecClass as String: kSecClassGenericPassword,
       kSecAttrService as String: service,
       kSecAttrAccount as String: account,
-      kSecUseDataProtectionKeychain as String: true,
+      kSecUseKeychain as String: try defaultKeychain(),
     ]
-    if let context {
-      query[kSecUseAuthenticationContext as String] = context
-    }
-    return query
   }
 
-  static func read(service: String, context: LAContext) throws -> Data? {
-    var query = query(service: service, context: context)
+  static func read(service: String) throws -> Data? {
+    var query = try query(service: service)
     query[kSecReturnData as String] = true
     query[kSecMatchLimit as String] = kSecMatchLimitOne
 

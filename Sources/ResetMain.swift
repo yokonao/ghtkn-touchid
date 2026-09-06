@@ -32,10 +32,10 @@ import Security
 
       var passphrase = try randomPassphrase()
       defer { passphrase.resetBytes(in: 0..<passphrase.count) }
-      let context = try PassphraseStore.stage(passphrase)
+      try PassphraseStore.stage(passphrase)
       try performReset(
         run: { try runGhtknReset(passphrase: passphrase) },
-        commit: { try PassphraseStore.commitPending(context: context) })
+        commit: { try PassphraseStore.commitPending() })
       writeStderr(
         "Reset the ghtkn agent with a generated passphrase. Start and unlock the agent.\n")
     }

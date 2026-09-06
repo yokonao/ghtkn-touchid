@@ -1,23 +1,21 @@
 import Darwin
 import Foundation
-import LocalAuthentication
 import Security
 
 extension PassphraseStore {
-  static func stage(_ passphrase: Data) throws -> LAContext {
-    let context = try TouchID.authenticate(reason: "Reset the ghtkn agent passphrase")
-    try delete(service: pendingService, context: context)
-    try upsert(passphrase, service: pendingService, context: context)
-    return context
+  static func stage(_ passphrase: Data) throws {
+    try TouchID.authenticate(reason: "Reset the ghtkn agent passphrase")
+    try delete(service: pendingService)
+    try upsert(passphrase, service: pendingService)
   }
 
-  static func commitPending(context: LAContext) throws {
-    try delete(service: committedService, context: context)
-    try rename(from: pendingService, to: committedService, context: context)
+  static func commitPending() throws {
+    try delete(service: committedService)
+    try rename(from: pendingService, to: committedService)
 
     do {
-      try delete(service: activeService, context: context)
-      try rename(from: committedService, to: activeService, context: context)
+      try delete(service: activeService)
+      try rename(from: committedService, to: activeService)
     } catch {
       writeStderr("ghtkn-touchid-reset: kept the committed passphrase for recovery: \(error)\n")
     }
@@ -25,37 +23,70 @@ extension PassphraseStore {
 
   #if TESTING
     static func cleanupForTesting() throws {
-      let context = try TouchID.authenticate(reason: "Clean up test Keychain items")
-      try delete(service: pendingService, context: context)
-      try delete(service: committedService, context: context)
-      try delete(service: activeService, context: context)
+      try delete(service: pendingService)
+      try delete(service: committedService)
+      try delete(service: activeService)
     }
   #endif
 
-  private static func accessControl() throws -> SecAccessControl {
-    var error: Unmanaged<CFError>?
-    guard
-      let access = SecAccessControlCreateWithFlags(
-        nil,
-        kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly,
-        .biometryCurrentSet,
-        &error
-      )
-    else {
-      throw HelperError(
-        "create Keychain access control: \(error?.takeRetainedValue().localizedDescription ?? "unknown error")"
-      )
+  /// The Keychain item is readable only by the helper binaries themselves, so the
+  /// passphrase never needs the `keychain-access-groups` entitlement that Touch ID
+  /// protected items in the data protection Keychain require.
+  private static func trustedHelpers() throws -> SecAccess {
+    let paths: [String]
+    #if TESTING
+      if let value = ProcessInfo.processInfo.environment["GHTKN_TOUCHID_TEST_TRUSTED_APPS"] {
+        paths = value.split(separator: ":").map(String.init)
+      } else {
+        paths = [CommandLine.arguments[0]]
+      }
+    #else
+      let directory = try helperDirectory()
+      paths = ["ghtkn-touchid", "ghtkn-touchid-reset"].map {
+        directory.appendingPathComponent($0).path
+      }
+    #endif
+
+    var applications = [SecTrustedApplication]()
+    for path in paths {
+      var application: SecTrustedApplication?
+      let status = path.withCString {
+        SecTrustedApplicationCreateFromPath($0, &application)
+      }
+      guard status == errSecSuccess, let application else {
+        throw keychainError("trust \(path)", status)
+      }
+      applications.append(application)
+    }
+
+    var access: SecAccess?
+    let status = SecAccessCreate(
+      "ghtkn agent passphrase" as CFString,
+      applications as CFArray,
+      &access
+    )
+    guard status == errSecSuccess, let access else {
+      throw keychainError("create Keychain access", status)
     }
     return access
   }
 
-  private static func upsert(_ passphrase: Data, service: String, context: LAContext) throws {
+  /// Both helpers are installed side by side, so the unlock helper is trusted from
+  /// the directory this reset helper runs from rather than a fixed install prefix.
+  private static func helperDirectory() throws -> URL {
+    guard let executable = Bundle.main.executableURL ?? URL(string: CommandLine.arguments[0]) else {
+      throw HelperError("locate the helper directory")
+    }
+    return executable.resolvingSymlinksInPath().deletingLastPathComponent()
+  }
+
+  private static func upsert(_ passphrase: Data, service: String) throws {
     let attributes: [String: Any] = [
       kSecValueData as String: passphrase,
-      kSecAttrAccessControl as String: try accessControl(),
+      kSecAttrAccess as String: try trustedHelpers(),
     ]
     let updateStatus = SecItemUpdate(
-      query(service: service, context: context) as CFDictionary,
+      try query(service: service) as CFDictionary,
       attributes as CFDictionary
     )
     if updateStatus == errSecSuccess { return }
@@ -63,7 +94,7 @@ extension PassphraseStore {
       throw keychainError("update the passphrase in Keychain", updateStatus)
     }
 
-    var item = query(service: service, context: context)
+    var item = try query(service: service)
     item.merge(attributes) { _, new in new }
     let addStatus = SecItemAdd(item as CFDictionary, nil)
     guard addStatus == errSecSuccess else {
@@ -71,16 +102,16 @@ extension PassphraseStore {
     }
   }
 
-  private static func delete(service: String, context: LAContext) throws {
-    let status = SecItemDelete(query(service: service, context: context) as CFDictionary)
+  private static func delete(service: String) throws {
+    let status = SecItemDelete(try query(service: service) as CFDictionary)
     guard status == errSecSuccess || status == errSecItemNotFound else {
       throw keychainError("remove \(service) from Keychain", status)
     }
   }
 
-  private static func rename(from: String, to: String, context: LAContext) throws {
+  private static func rename(from: String, to: String) throws {
     let status = SecItemUpdate(
-      query(service: from, context: context) as CFDictionary,
+      try query(service: from) as CFDictionary,
       [kSecAttrService as String: to] as CFDictionary
     )
     guard status == errSecSuccess else {

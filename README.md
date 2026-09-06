@@ -4,7 +4,7 @@
 
 ## Requirements
 
-- macOS 13 or later with Touch ID and a device passcode
+- macOS 13 or later with Touch ID
 - Swift 5.9 or later
 - ghtkn v0.4.0 available in an absolute `PATH` entry
 - the ghtkn agent backend
@@ -53,13 +53,24 @@ The same command is used for the first-time setup and for rotating the passphras
 
 Keychain uses `pending`, `committed`, and active items. A failed ghtkn reset keeps the old active item and the pending passphrase. An interrupted commit keeps either the active or committed item so the unlock helper can try recovery candidates.
 
+## Troubleshooting
+
+`ghtkn-touchid: the ghtkn passphrase is not stored in Keychain` — nothing has written the passphrase yet. Run `ghtkn-touchid-reset` once, as in the first-time setup.
+
+`A required entitlement isn't present.` — the binaries are storing the passphrase as a data protection Keychain item, which needs an entitlement these helpers cannot carry. Rebuild and reinstall from the current sources; the reset aborts before it touches the agent, so nothing is lost.
+
+macOS asks for permission to use the Keychain item — the access list names the installed helper binaries, and reinstalling replaces them. Approving the prompt keeps the item usable; `ghtkn-touchid-reset` rewrites the access list for the new binaries.
+
 ## Security model
 
-The passphrase is not accepted through arguments or production environment variables and is not written to stdout, logs, or the clipboard. Requests and PTY buffers are overwritten after use. Agent errors are not relayed because an untrusted socket could reflect a passphrase. Keychain items use `kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly` with `biometryCurrentSet`; changing the enrolled biometric set invalidates access.
+The passphrase is not accepted through arguments or production environment variables and is not written to stdout, logs, or the clipboard. Requests and PTY buffers are overwritten after use. Agent errors are not relayed because an untrusted socket could reflect a passphrase.
+
+The passphrase item lives in the default (login) Keychain with an access list that trusts only the two helper binaries, and each helper requires Touch ID before it reads the item. Storing it instead as a data protection Keychain item with `SecAccessControl` and `biometryCurrentSet` would let macOS enforce the biometric check on the item itself, but that requires the restricted `keychain-access-groups` entitlement: it is honored only in a signature from an Apple-issued identity, an ad-hoc signature carrying it is killed at launch, and without it every write fails with `A required entitlement isn't present.` These helpers therefore rely on the Keychain access list plus their own Touch ID gate.
 
 This helper does not protect against:
 
 - a compromised user session, kernel, or helper binary;
+- a program the user authorizes at the macOS Keychain prompt;
 - another process using the agent socket while the agent is unlocked;
 - disclosure from ghtkn itself or from a compromised same-user agent;
 - physical access after successful biometric authentication.

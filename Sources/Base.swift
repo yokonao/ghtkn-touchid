@@ -20,14 +20,14 @@ func keychainError(_ operation: String, _ status: OSStatus) -> HelperError {
 }
 
 enum TouchID {
-  static func authenticate(reason: String) throws -> LAContext {
-    let context = LAContext()
+  static func authenticate(reason: String) throws {
     #if TESTING
       if ProcessInfo.processInfo.environment["GHTKN_TOUCHID_TESTING"] == "1" {
-        return context
+        return
       }
     #endif
 
+    let context = LAContext()
     context.localizedCancelTitle = "Cancel"
     context.localizedFallbackTitle = ""
     context.touchIDAuthenticationAllowableReuseDuration = 0
@@ -54,7 +54,6 @@ enum TouchID {
       throw HelperError(
         authenticationError?.localizedDescription ?? "Touch ID authentication failed")
     }
-    return context
   }
 }
 

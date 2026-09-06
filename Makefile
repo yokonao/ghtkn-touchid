@@ -9,7 +9,8 @@ export CLANG_MODULE_CACHE_PATH
 
 SWIFTC = xcrun swiftc
 FLAGS = -sdk $(SDKROOT) -target $(TARGET) -swift-version 5 -parse-as-library \
-	-framework LocalAuthentication -framework Security -warnings-as-errors
+	-framework LocalAuthentication -framework Security -warnings-as-errors \
+	-Wwarning DeprecatedDeclaration
 CORE = Sources/Base.swift Sources/PassphraseStore.swift
 UNLOCK = $(CORE) Sources/AgentClient.swift Sources/UnlockMain.swift
 RESET = $(CORE) Sources/PassphraseReset.swift Sources/ResetPTY.swift Sources/ResetMain.swift
