@@ -6,9 +6,9 @@
 
 - macOS 13 or later with Touch ID
 - Swift 5.9 or later
-- ghtkn v0.4.0 configured with the agent backend, available in an absolute `PATH` entry
+- ghtkn v0.3.4–v0.4.0 configured with the agent backend, available in an absolute `PATH` entry — see [Testing against ghtkn](#testing-against-ghtkn)
 
-The helper implements the public newline-delimited JSON agent protocol v1 from [ghtkn-go-sdk v0.6.1](https://github.com/suzuki-shunsuke/ghtkn-go-sdk/blob/v0.6.1/ghtkn/backend/agent/protocol.go), and follows ghtkn's socket lookup order: `GHTKN_AGENT_SOCKET`, `XDG_RUNTIME_DIR`, `XDG_CACHE_HOME`, then `~/.cache/ghtkn/agent.sock`.
+The helper implements [protocol v1](https://github.com/suzuki-shunsuke/ghtkn-go-sdk/blob/main/ghtkn/backend/agent/protocol.go) of ghtkn's public newline-delimited JSON agent protocol, and follows ghtkn's socket lookup order: `GHTKN_AGENT_SOCKET`, `XDG_RUNTIME_DIR`, `XDG_CACHE_HOME`, then `~/.cache/ghtkn/agent.sock`.
 
 ## Install
 
@@ -21,7 +21,11 @@ brew install yokonao/ghtkn-touchid/ghtkn-touchid
 
 To build from a checkout instead, run `make build` and `make test`, then `./install.sh` to write both binaries to `~/.local/bin`. The installer is optional, but keep the two binaries together in one directory: the reset grants Keychain access to the pair it finds beside itself, so moving them afterward makes macOS ask for permission until the reset runs again.
 
-`make test-integration` drives a real, isolated `ghtkn agent` through the actual unlock protocol (Keychain and Touch ID are not involved); run it after bumping the pinned ghtkn/SDK version, with `ghtkn` available in `PATH`.
+## Testing against ghtkn
+
+`make test-integration GHTKN_VERSION=vX.Y.Z` downloads that ghtkn release from GitHub Releases and drives it, isolated from any real agent, through `agent reset` → `agent start` → `agent unlock` using this helper's actual protocol code (Keychain and Touch ID are not involved). Omitting `GHTKN_VERSION` uses whatever `ghtkn` is already on `PATH`.
+
+Checked against every release from v0.1.0 through v0.4.0: v0.3.4–v0.4.0 pass; v0.2.5–v0.3.3 speak an older agent protocol version this helper rejects; v0.1.0–v0.2.4 predate `agent reset`/`agent start` entirely. Run it against a new release before widening the range above.
 
 ## Unlock
 
