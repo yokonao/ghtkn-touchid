@@ -22,16 +22,16 @@ all: build
 
 build: $(BUILD_DIR)/ghtkn-touchid $(BUILD_DIR)/ghtkn-touchid-reset
 
-$(BUILD_DIR):
-	mkdir -p $@
-
-$(BUILD_DIR)/ghtkn-touchid: Makefile $(UNLOCK) | $(BUILD_DIR)
+$(BUILD_DIR)/ghtkn-touchid: Makefile $(UNLOCK)
+	@mkdir -p $(@D)
 	$(SWIFTC) $(FLAGS) -O $(UNLOCK) -o $@
 
-$(BUILD_DIR)/ghtkn-touchid-reset: Makefile $(RESET) | $(BUILD_DIR)
+$(BUILD_DIR)/ghtkn-touchid-reset: Makefile $(RESET)
+	@mkdir -p $(@D)
 	$(SWIFTC) $(FLAGS) -O $(RESET) -o $@
 
-$(BUILD_DIR)/ghtkn-touchid-tests: Makefile $(TEST) | $(BUILD_DIR)
+$(BUILD_DIR)/ghtkn-touchid-tests: Makefile $(TEST)
+	@mkdir -p $(@D)
 	$(SWIFTC) $(FLAGS) -Onone -D TESTING -D UNIT_TESTING $(TEST) -o $@
 
 test: build $(BUILD_DIR)/ghtkn-touchid-tests

@@ -11,7 +11,16 @@
 
 The helper implements the public newline-delimited JSON agent protocol v1 from [ghtkn-go-sdk v0.6.1](https://github.com/suzuki-shunsuke/ghtkn-go-sdk/blob/v0.6.1/ghtkn/backend/agent/protocol.go). It follows ghtkn's documented socket lookup order: `GHTKN_AGENT_SOCKET`, `XDG_RUNTIME_DIR`, `XDG_CACHE_HOME`, then `~/.cache/ghtkn/agent.sock`.
 
-## Build, test, and install
+## Install
+
+This repository is also its own Homebrew tap, so the formula is tapped from the repository URL:
+
+```sh
+brew tap yokonao/ghtkn-touchid https://github.com/yokonao/ghtkn-touchid
+brew install yokonao/ghtkn-touchid/ghtkn-touchid
+```
+
+To build from a checkout instead:
 
 ```sh
 make build
@@ -19,7 +28,7 @@ make test
 ./install.sh
 ```
 
-The installer is optional. It writes `ghtkn-touchid` and `ghtkn-touchid-reset` to `~/.local/bin`; the binaries can be installed elsewhere.
+The installer is optional. It writes `ghtkn-touchid` and `ghtkn-touchid-reset` to `~/.local/bin`; the binaries can be installed elsewhere, as long as both sit in the same directory.
 
 ## First-time setup
 
@@ -59,7 +68,7 @@ Keychain uses `pending`, `committed`, and active items. A failed ghtkn reset kee
 
 `A required entitlement isn't present.` — the binaries are storing the passphrase as a data protection Keychain item, which needs an entitlement these helpers cannot carry. Rebuild and reinstall from the current sources; the reset aborts before it touches the agent, so nothing is lost.
 
-macOS asks for permission to use the Keychain item — the access list names the installed helper binaries, and reinstalling replaces them. Approving the prompt keeps the item usable; `ghtkn-touchid-reset` rewrites the access list for the new binaries.
+macOS asks for permission to use the Keychain item — the access list names the installed helper binaries, and reinstalling or upgrading replaces them. Approving the prompt keeps the item usable; `ghtkn-touchid-reset` rewrites the access list for the new binaries.
 
 ## Security model
 
