@@ -44,6 +44,9 @@ func runGhtknReset(passphrase: Data) throws -> Int32 {
     try drainPTY(master)
   } catch {
     kill(pid, SIGTERM)
+    // A session leader blocks in its exit path until the terminal output queue is
+    // drained, so read the rest of it before waiting for the child.
+    try? drainPTY(master)
     _ = try? waitForChild(pid)
     throw error
   }
@@ -82,6 +85,10 @@ func ghtknExecutable() throws -> String {
 
 private func waitForEchoDisabled(_ descriptor: Int32, child pid: pid_t) throws -> Int32? {
   for _ in 0..<200 {
+    // The prompts written so far are discarded rather than left in the terminal
+    // output queue, which would otherwise stall the child once it fills up.
+    try drainReadable(descriptor)
+
     var settings = termios()
     if tcgetattr(descriptor, &settings) == 0, settings.c_lflag & tcflag_t(ECHO) == 0 {
       return nil
@@ -101,6 +108,32 @@ private func waitForEchoDisabled(_ descriptor: Int32, child pid: pid_t) throws -
 private func writePTY(_ descriptor: Int32, _ data: Data) throws {
   try writeAll(data, operation: "write to ghtkn") { pointer, count in
     Darwin.write(descriptor, pointer, count)
+  }
+}
+
+/// Reads and discards whatever the child has already written, without blocking.
+private func drainReadable(_ descriptor: Int32) throws {
+  while true {
+    var descriptors = pollfd(fd: descriptor, events: Int16(POLLIN), revents: 0)
+    let ready = poll(&descriptors, 1, 0)
+    if ready < 0 {
+      if errno == EINTR { continue }
+      throw HelperError("poll ghtkn output: \(String(cString: strerror(errno)))")
+    }
+    if ready == 0 { return }
+
+    var buffer = [UInt8](repeating: 0, count: 4096)
+    defer {
+      _ = buffer.withUnsafeMutableBytes {
+        $0.initializeMemory(as: UInt8.self, repeating: 0)
+      }
+    }
+    let count = Darwin.read(descriptor, &buffer, buffer.count)
+    if count == 0 || count < 0 && errno == EIO { return }
+    if count < 0 {
+      if errno == EINTR { continue }
+      throw HelperError("read ghtkn output: \(String(cString: strerror(errno)))")
+    }
   }
 }
 
