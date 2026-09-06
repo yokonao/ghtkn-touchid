@@ -21,7 +21,20 @@ make test
 
 The installer is optional. It writes `ghtkn-touchid` and `ghtkn-touchid-reset` to `~/.local/bin`; the binaries can be installed elsewhere.
 
-Start the configured agent, then unlock it:
+## First-time setup
+
+Only `ghtkn-touchid-reset` writes the passphrase to Keychain, so run it once before the first unlock. Without it, `ghtkn-touchid` fails with `the ghtkn passphrase is not stored in Keychain`.
+
+```sh
+ghtkn-touchid-reset
+ghtkn agent start &
+ghtkn-touchid
+ghtkn auth
+```
+
+The reset replaces the ghtkn agent key, so `ghtkn auth` is needed afterward to reauthenticate the configured GitHub Apps.
+
+## Unlock
 
 ```sh
 ghtkn agent start &
@@ -36,7 +49,7 @@ Each unlock from the locked state requires Touch ID. The helper enables refresh 
 ghtkn-touchid-reset
 ```
 
-The reset requires a terminal, Touch ID, and the exact confirmation `RESET`. It generates a 256-bit random passphrase, stages it in Keychain, and runs `ghtkn agent reset` through a PTY. It confirms the ghtkn reset, waits for terminal echo to be disabled, then sends the passphrase twice without depending on prompt text. The ghtkn reset stops the agent and deletes its encryption key and cached access and refresh tokens. Reauthenticate configured GitHub Apps with `ghtkn auth` afterward.
+The same command is used for the first-time setup and for rotating the passphrase later. It requires a terminal, Touch ID, and the exact confirmation `RESET`. It generates a 256-bit random passphrase, stages it in Keychain, and runs `ghtkn agent reset` through a PTY. It confirms the ghtkn reset, waits for terminal echo to be disabled, then sends the passphrase twice without depending on prompt text. The ghtkn reset stops the agent and deletes its encryption key and cached access and refresh tokens. Reauthenticate configured GitHub Apps with `ghtkn auth` afterward.
 
 Keychain uses `pending`, `committed`, and active items. A failed ghtkn reset keeps the old active item and the pending passphrase. An interrupted commit keeps either the active or committed item so the unlock helper can try recovery candidates.
 
