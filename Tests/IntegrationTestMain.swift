@@ -1,3 +1,4 @@
+import Darwin
 import Foundation
 
 @main
@@ -15,9 +16,7 @@ enum IntegrationTestMain {
   private static func run() throws {
     let ghtkn = try ghtknExecutable()
 
-    let root = FileManager.default.temporaryDirectory
-      .appendingPathComponent("ghtkn-touchid-integration-\(UUID().uuidString)")
-    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    let root = try makeTempDirectory()
     defer { try? FileManager.default.removeItem(at: root) }
 
     setenv("GHTKN_AGENT_SOCKET", root.appendingPathComponent("agent.sock").path, 1)
@@ -57,6 +56,20 @@ enum IntegrationTestMain {
     guard status.ok, status.locked != true else {
       throw HelperError("the ghtkn agent was still locked after unlock")
     }
+  }
+
+  /// AF_UNIX socket paths are capped at ~104 bytes, and `FileManager`'s
+  /// `temporaryDirectory` (`/var/folders/.../T/`) already eats most of that budget, so
+  /// the agent socket needs a short root instead.
+  private static func makeTempDirectory() throws -> URL {
+    var template = Array("/tmp/ghtkn-touchid-it.XXXXXX\0".utf8CString)
+    let path: String = try template.withUnsafeMutableBufferPointer { buffer in
+      guard let base = buffer.baseAddress, mkdtemp(base) != nil else {
+        throw HelperError("create a temp directory: \(String(cString: strerror(errno)))")
+      }
+      return String(cString: base)
+    }
+    return URL(fileURLWithPath: path)
   }
 
   private static func waitForSocket(_ path: String, process: Process, output: Pipe) throws {
