@@ -70,6 +70,18 @@ Keychain uses `pending`, `committed`, and active items. A failed ghtkn reset kee
 
 macOS asks for permission to use the Keychain item — the access list names the installed helper binaries, and reinstalling or upgrading replaces them. Approving the prompt keeps the item usable; `ghtkn-touchid-reset` rewrites the access list for the new binaries.
 
+## Releasing
+
+Homebrew builds from the source tarball GitHub generates for a tag, so a release is a tag plus a formula bump. No GitHub release page is involved.
+
+```sh
+git tag -a v0.1.2 -m v0.1.2
+git push origin v0.1.2
+curl -sL https://github.com/yokonao/ghtkn-touchid/archive/refs/tags/v0.1.2.tar.gz | shasum -a 256
+```
+
+Put that checksum and the new tag in `url` and `sha256` in `Formula/ghtkn-touchid.rb`, then push the formula to `main`; the tap serves the formula from `main`, so it takes effect on the next `brew update`.
+
 ## Security model
 
 The passphrase is not accepted through arguments or production environment variables and is not written to stdout, logs, or the clipboard. Requests and PTY buffers are overwritten after use. Agent errors are not relayed because an untrusted socket could reflect a passphrase.
