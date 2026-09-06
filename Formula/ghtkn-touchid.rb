@@ -1,8 +1,8 @@
 class GhtknTouchid < Formula
   desc "Unlock a local ghtkn agent with a Touch ID-protected passphrase"
   homepage "https://github.com/yokonao/ghtkn-touchid"
-  url "https://github.com/yokonao/ghtkn-touchid/archive/refs/tags/v0.1.1.tar.gz"
-  sha256 "b10edd7cf0d2f2a7af2b138d92043c99c926736af68dfb19ef333f2f9658be74"
+  url "https://github.com/yokonao/ghtkn-touchid/archive/refs/tags/v0.1.2.tar.gz"
+  sha256 "20c6bbaddb05c7eeed62f9cf2674b552219e067e3f8a4236f10f5dec9c2ff4c9"
   license "MIT"
   head "https://github.com/yokonao/ghtkn-touchid.git", branch: "main"
 
