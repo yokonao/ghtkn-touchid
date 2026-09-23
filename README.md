@@ -19,7 +19,7 @@ brew tap yokonao/ghtkn-touchid https://github.com/yokonao/ghtkn-touchid
 brew install yokonao/ghtkn-touchid/ghtkn-touchid
 ```
 
-To build from a checkout instead, run `make build` and `make test`, then `./install.sh` to write both binaries to `~/.local/bin`. The installer is optional, but keep the two binaries together in one directory: the reset grants Keychain access to the pair it finds beside itself, so moving them afterward makes macOS ask for permission until the reset runs again.
+To build from a checkout instead, run `make build` and `make test`, then `./install.sh` to write the binary to `~/.local/bin`. The reset grants Keychain access to the binary that runs it, so moving it afterward makes macOS ask for permission until the reset runs again.
 
 ## Testing against ghtkn
 
@@ -36,31 +36,31 @@ ghtkn-touchid
 
 Each unlock from the locked state requires Touch ID. If the agent is already unlocked, it does not access Keychain.
 
-A fresh install has no passphrase to read yet, so run `ghtkn-touchid-reset` before the first unlock, and `ghtkn auth` after it.
+A fresh install has no passphrase to read yet, so run `ghtkn-touchid reset` before the first unlock, and `ghtkn auth` after it.
 
 ## Reset
 
 ```sh
-ghtkn-touchid-reset
+ghtkn-touchid reset
 ```
 
-The reset requires a terminal, Touch ID, and the exact confirmation `RESET`. It generates a 256-bit random passphrase, resets the ghtkn agent with it through a PTY, and stores it in a Keychain item whose access list names the two installed helper binaries.
+The reset requires a terminal, Touch ID, and the exact confirmation `RESET`. It generates a 256-bit random passphrase, resets the ghtkn agent with it through a PTY, and stores it in a Keychain item whose access list names the installed helper binary.
 
 The ghtkn reset stops the agent and deletes its encryption key and cached access and refresh tokens, so the configured GitHub Apps need `ghtkn auth` again.
 
 ## Troubleshooting
 
-`ghtkn-touchid: the ghtkn passphrase is not stored in Keychain` — nothing has written the passphrase yet. Run `ghtkn-touchid-reset` once, as in the first run.
+`ghtkn-touchid: the ghtkn passphrase is not stored in Keychain` — nothing has written the passphrase yet. Run `ghtkn-touchid reset` once, as in the first run.
 
-`A required entitlement isn't present.` — an older build stored the passphrase in the data protection Keychain, which needs an entitlement these helpers cannot carry. Reinstall from the current sources; the reset aborts before it touches the agent, so nothing is lost.
+`A required entitlement isn't present.` — an older build stored the passphrase in the data protection Keychain, which needs an entitlement this helper cannot carry. Reinstall from the current sources; the reset aborts before it touches the agent, so nothing is lost.
 
-macOS asks for permission to use the Keychain item — the access list names the installed helper binaries, and reinstalling or upgrading replaces them. Approving the prompt keeps the item usable, and `ghtkn-touchid-reset` rewrites the access list for the new binaries.
+macOS asks for permission to use the Keychain item — the access list names the installed helper binary, and reinstalling or upgrading replaces it. Approving the prompt keeps the item usable, and `ghtkn-touchid reset` rewrites the access list for the new binary.
 
 ## Security model
 
 The passphrase is not accepted through arguments or environment variables and is not written to stdout, logs, or the clipboard. Requests and PTY buffers are overwritten after use. Agent errors are not relayed because an untrusted socket could reflect a passphrase.
 
-The passphrase item lives in the login Keychain with an access list that trusts only the two helper binaries. macOS enforces that list; the biometric check is enforced by the helpers themselves.
+The passphrase item lives in the login Keychain with an access list that trusts only the helper binary. macOS enforces that list; the biometric check is enforced by the helper itself.
 
 This helper does not protect against:
 

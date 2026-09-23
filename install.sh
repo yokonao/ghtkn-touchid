@@ -11,6 +11,5 @@ mkdir -p "$bin_dir"
 make -s -C "$script_dir" build BUILD_DIR="$build_dir"
 
 install -m 755 "$build_dir/ghtkn-touchid" "$bin_dir/ghtkn-touchid"
-install -m 755 "$build_dir/ghtkn-touchid-reset" "$bin_dir/ghtkn-touchid-reset"
 
-echo "Installed $bin_dir/ghtkn-touchid and $bin_dir/ghtkn-touchid-reset"
+echo "Installed $bin_dir/ghtkn-touchid"

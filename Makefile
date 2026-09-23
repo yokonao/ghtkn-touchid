@@ -11,37 +11,29 @@ SWIFTC = xcrun swiftc
 FLAGS = -sdk $(SDKROOT) -target $(TARGET) -swift-version 5 -parse-as-library \
 	-framework LocalAuthentication -framework Security -warnings-as-errors \
 	-Wwarning DeprecatedDeclaration
-CORE = Sources/Base.swift Sources/PassphraseStore.swift
-UNLOCK = $(CORE) Sources/AgentClient.swift Sources/UnlockMain.swift
-RESET = $(CORE) Sources/PassphraseReset.swift Sources/ResetPTY.swift Sources/ResetMain.swift
-TEST = $(CORE) Sources/AgentClient.swift Sources/ResetPTY.swift Sources/ResetMain.swift Tests/TestMain.swift
-INTEGRATION = $(CORE) Sources/AgentClient.swift Sources/ResetPTY.swift Tests/IntegrationTestMain.swift
+LIB = $(filter-out Sources/Main.swift,$(wildcard Sources/*.swift))
 
 .PHONY: all build test test-integration
 
 all: build
 
-build: $(BUILD_DIR)/ghtkn-touchid $(BUILD_DIR)/ghtkn-touchid-reset
+build: $(BUILD_DIR)/ghtkn-touchid
 
-$(BUILD_DIR)/ghtkn-touchid: Makefile $(UNLOCK)
+$(BUILD_DIR)/ghtkn-touchid: Makefile $(LIB) Sources/Main.swift
 	@mkdir -p $(@D)
-	$(SWIFTC) $(FLAGS) -O $(UNLOCK) -o $@
+	$(SWIFTC) $(FLAGS) -O $(LIB) Sources/Main.swift -o $@
 
-$(BUILD_DIR)/ghtkn-touchid-reset: Makefile $(RESET)
+$(BUILD_DIR)/ghtkn-touchid-tests: Makefile $(LIB) Tests/TestMain.swift
 	@mkdir -p $(@D)
-	$(SWIFTC) $(FLAGS) -O $(RESET) -o $@
+	$(SWIFTC) $(FLAGS) -Onone -D TESTING $(LIB) Tests/TestMain.swift -o $@
 
-$(BUILD_DIR)/ghtkn-touchid-tests: Makefile $(TEST)
+$(BUILD_DIR)/ghtkn-touchid-integration: Makefile $(LIB) Tests/IntegrationTestMain.swift
 	@mkdir -p $(@D)
-	$(SWIFTC) $(FLAGS) -Onone -D TESTING -D UNIT_TESTING $(TEST) -o $@
-
-$(BUILD_DIR)/ghtkn-touchid-integration: Makefile $(INTEGRATION)
-	@mkdir -p $(@D)
-	$(SWIFTC) $(FLAGS) -Onone $(INTEGRATION) -o $@
+	$(SWIFTC) $(FLAGS) -Onone $(LIB) Tests/IntegrationTestMain.swift -o $@
 
 test: build $(BUILD_DIR)/ghtkn-touchid-tests
 	$(BUILD_DIR)/ghtkn-touchid-tests
-	@if strings $(BUILD_DIR)/ghtkn-touchid $(BUILD_DIR)/ghtkn-touchid-reset | grep -q GHTKN_TOUCHID_TEST; then \
+	@if strings $(BUILD_DIR)/ghtkn-touchid | grep -q GHTKN_TOUCHID_TEST; then \
 		echo "test-only authentication override found in a production binary" >&2; exit 1; \
 	fi
 
