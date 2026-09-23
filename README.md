@@ -27,6 +27,17 @@ To build from a checkout instead, run `make build` and `make test`, then `./inst
 
 Checked against every release from v0.1.0 through v0.4.0: v0.3.4–v0.4.0 pass; v0.2.5–v0.3.3 speak an older agent protocol version this helper rejects; v0.1.0–v0.2.4 predate `agent reset`/`agent start` entirely. Run it against a new release before widening the range above.
 
+## Go implementation
+
+`go/` holds an experimental port of the same helper in Go, using cobra for the CLI and cgo for Keychain (C) and Touch ID (Objective-C). It uses the same Keychain items, so either build can unlock what the other reset.
+
+```sh
+cd go
+go build -o ghtkn-touchid ./cmd/ghtkn-touchid
+go test ./...
+go test -tags integration ./...   # needs ghtkn on PATH
+```
+
 ## Unlock
 
 ```sh
