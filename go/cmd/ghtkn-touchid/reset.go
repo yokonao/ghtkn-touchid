@@ -1,5 +1,4 @@
-// Package app wires the ghtkn-touchid commands out of the other packages.
-package app
+package main
 
 import (
 	"bufio"
@@ -13,25 +12,11 @@ import (
 
 	"golang.org/x/sys/unix"
 
-	"github.com/yokonao/ghtkn-touchid/go/internal/agent"
 	"github.com/yokonao/ghtkn-touchid/go/internal/ghtkn"
 	"github.com/yokonao/ghtkn-touchid/go/internal/passphrase"
 )
 
-func Unlock(stderr io.Writer) error {
-	result, err := agent.Unlock(passphrase.Load, agent.Send)
-	if err != nil {
-		return err
-	}
-	if result.AlreadyUnlocked {
-		fmt.Fprintf(stderr, "ghtkn agent is already unlocked; refresh_token_enabled=%t\n", result.RefreshTokenEnabled)
-	} else {
-		fmt.Fprintln(stderr, "ghtkn agent unlocked; refresh_token_enabled=true")
-	}
-	return nil
-}
-
-func Reset(stdin *os.File, stderr io.Writer) error {
+func reset(stdin *os.File, stderr io.Writer) error {
 	if _, err := unix.IoctlGetTermios(int(stdin.Fd()), unix.TIOCGETA); err != nil {
 		return errors.New("reset requires a terminal")
 	}
