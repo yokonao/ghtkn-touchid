@@ -1,7 +1,6 @@
-package main
+package ghtkn
 
 import (
-	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,36 +14,17 @@ func writeExecutable(t *testing.T, path, body string) {
 	}
 }
 
-func TestResetRecoveryBoundary(t *testing.T) {
-	committed := false
-	commit := func() error { committed = true; return nil }
-	if err := performReset(func() (int, error) { return 23, nil }, commit); err == nil ||
-		!strings.Contains(err.Error(), "kept the pending passphrase") {
-		t.Fatalf("got %v", err)
-	}
-	if err := performReset(func() (int, error) { return 0, errors.New("child setup") }, commit); err == nil ||
-		!strings.Contains(err.Error(), "kept the pending passphrase") {
-		t.Fatalf("got %v", err)
-	}
-	if committed {
-		t.Fatal("failed reset committed")
-	}
-	if err := performReset(func() (int, error) { return 0, nil }, commit); err != nil || !committed {
-		t.Fatalf("err=%v committed=%t", err, committed)
-	}
-}
-
 func TestGhtknLookup(t *testing.T) {
 	dir := t.TempDir()
 	executable := filepath.Join(dir, "ghtkn")
 	writeExecutable(t, executable, "exit 0")
 
 	t.Setenv("PATH", ".:"+dir)
-	if resolved, err := ghtknExecutable(); err != nil || resolved != executable {
+	if resolved, err := Executable(); err != nil || resolved != executable {
 		t.Fatalf("resolved=%q err=%v", resolved, err)
 	}
 	t.Setenv("PATH", ".:")
-	if _, err := ghtknExecutable(); err == nil || !strings.Contains(err.Error(), "absolute PATH") {
+	if _, err := Executable(); err == nil || !strings.Contains(err.Error(), "absolute PATH") {
 		t.Fatalf("got %v", err)
 	}
 }
@@ -66,7 +46,7 @@ printf 'second secret: '
 IFS= read -r second
 stty echo
 test "$first" = "$second"`)
-	if status, err := runGhtknReset(success, secret); err != nil || status != 0 {
+	if status, err := ResetAgent(success, secret); err != nil || status != 0 {
 		t.Fatalf("status=%d err=%v", status, err)
 	}
 
@@ -77,7 +57,7 @@ IFS= read -r answer
 printf 'echo remains enabled: '
 IFS= read -r value
 printf '%s' "$value" > '`+received+`'`)
-	if _, err := runGhtknReset(echo, secret); err == nil || !strings.Contains(err.Error(), "echo remained enabled") {
+	if _, err := ResetAgent(echo, secret); err == nil || !strings.Contains(err.Error(), "echo remained enabled") {
 		t.Fatalf("got %v", err)
 	}
 	if _, err := os.Stat(received); err == nil {
@@ -88,7 +68,7 @@ printf '%s' "$value" > '`+received+`'`)
 	writeExecutable(t, abnormal, `printf 'confirmation: '
 IFS= read -r answer
 kill -TERM $$`)
-	if status, err := runGhtknReset(abnormal, secret); err != nil || status != 143 {
+	if status, err := ResetAgent(abnormal, secret); err != nil || status != 143 {
 		t.Fatalf("status=%d err=%v", status, err)
 	}
 }

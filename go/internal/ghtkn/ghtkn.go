@@ -1,77 +1,20 @@
-package main
+// Package ghtkn drives the ghtkn CLI.
+package ghtkn
 
 import (
-	"bufio"
-	"crypto/rand"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/creack/pty"
 	"golang.org/x/sys/unix"
 )
 
-func reset() error {
-	if _, err := unix.IoctlGetTermios(int(os.Stdin.Fd()), unix.TIOCGETA); err != nil {
-		return errors.New("reset requires a terminal")
-	}
-	fmt.Fprint(os.Stderr, "This deletes the ghtkn agent key and all cached tokens. Type RESET to continue: ")
-	answer, _ := bufio.NewReader(os.Stdin).ReadString('\n')
-	if strings.TrimSuffix(answer, "\n") != "RESET" {
-		fmt.Fprintln(os.Stderr, "Canceled.")
-		return nil
-	}
-
-	ghtkn, err := ghtknExecutable()
-	if err != nil {
-		return err
-	}
-	passphrase, err := randomPassphrase()
-	if err != nil {
-		return err
-	}
-	defer clear(passphrase)
-	if err := stagePassphrase(passphrase); err != nil {
-		return err
-	}
-	err = performReset(
-		func() (int, error) { return runGhtknReset(ghtkn, passphrase) },
-		commitPending)
-	if err != nil {
-		return err
-	}
-	fmt.Fprintln(os.Stderr, "Reset the ghtkn agent with a generated passphrase. Start and unlock the agent.")
-	return nil
-}
-
-func randomPassphrase() ([]byte, error) {
-	random := make([]byte, 32)
-	defer clear(random)
-	if _, err := rand.Read(random); err != nil {
-		return nil, errors.New("generate a random passphrase")
-	}
-	passphrase := make([]byte, base64.StdEncoding.EncodedLen(len(random)))
-	base64.StdEncoding.Encode(passphrase, random)
-	return passphrase, nil
-}
-
-func performReset(run func() (int, error), commit func() error) error {
-	status, err := run()
-	if err != nil {
-		return errors.New("ghtkn agent reset failed; kept the pending passphrase for recovery")
-	}
-	if status != 0 {
-		return fmt.Errorf("ghtkn agent reset exited %d; kept the pending passphrase for recovery", status)
-	}
-	return commit()
-}
-
-func ghtknExecutable() (string, error) {
+// Executable resolves ghtkn from absolute PATH entries only.
+func Executable() (string, error) {
 	for _, dir := range filepath.SplitList(os.Getenv("PATH")) {
 		if !filepath.IsAbs(dir) {
 			continue
@@ -84,7 +27,9 @@ func ghtknExecutable() (string, error) {
 	return "", errors.New("ghtkn was not found in an absolute PATH entry")
 }
 
-func runGhtknReset(ghtkn string, passphrase []byte) (int, error) {
+// ResetAgent runs `ghtkn agent reset` in a PTY, confirms it, and types the
+// passphrase twice only once the terminal echo is off. It returns the exit code.
+func ResetAgent(ghtkn string, passphrase []byte) (int, error) {
 	cmd := exec.Command(ghtkn, "agent", "reset")
 	master, err := pty.Start(cmd)
 	if err != nil {

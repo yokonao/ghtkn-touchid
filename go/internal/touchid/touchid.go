@@ -1,4 +1,5 @@
-package main
+// Package touchid gates an operation behind a Touch ID prompt.
+package touchid
 
 /*
 #cgo LDFLAGS: -framework Foundation -framework LocalAuthentication
@@ -12,7 +13,7 @@ import (
 	"unsafe"
 )
 
-func authenticate(reason string) error {
+func Authenticate(reason string) error {
 	r := C.CString(reason)
 	defer C.free(unsafe.Pointer(r))
 	var message *C.char

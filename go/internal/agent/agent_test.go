@@ -1,4 +1,4 @@
-package main
+package agent
 
 import (
 	"bytes"
@@ -7,8 +7,8 @@ import (
 	"testing"
 )
 
-func response(ok bool, locked *bool, version, minimum int) agentResponse {
-	return agentResponse{OK: ok, Locked: locked, ProtocolVersion: &version, MinProtocolVersion: &minimum}
+func response(ok bool, locked *bool, version, minimum int) Response {
+	return Response{OK: ok, Locked: locked, ProtocolVersion: &version, MinProtocolVersion: &minimum}
 }
 
 func ptr[T any](v T) *T { return &v }
@@ -25,10 +25,10 @@ func TestUnlockRequestEncoding(t *testing.T) {
 }
 
 func TestAlreadyUnlockedSkipsKeychain(t *testing.T) {
-	err := unlock(
-		func() ([]storedPassphrase, error) { t.Fatal("loaded Keychain"); return nil, nil },
-		func(request []byte) (agentResponse, error) {
-			if !bytes.Equal(request, statusRequest()) {
+	_, err := Unlock(
+		func() ([][]byte, error) { t.Fatal("loaded Keychain"); return nil, nil },
+		func(request []byte) (Response, error) {
+			if !bytes.Equal(request, StatusRequest()) {
 				t.Fatal("status must come first")
 			}
 			return response(true, ptr(false), 1, 0), nil
@@ -39,9 +39,9 @@ func TestAlreadyUnlockedSkipsKeychain(t *testing.T) {
 }
 
 func TestProtocolMismatchSkipsKeychain(t *testing.T) {
-	err := unlock(
-		func() ([]storedPassphrase, error) { t.Fatal("loaded Keychain"); return nil, nil },
-		func([]byte) (agentResponse, error) { return response(true, ptr(true), 2, 2), nil })
+	_, err := Unlock(
+		func() ([][]byte, error) { t.Fatal("loaded Keychain"); return nil, nil },
+		func([]byte) (Response, error) { return response(true, ptr(true), 2, 2), nil })
 	if err == nil || err.Error() != "unsupported ghtkn agent protocol" {
 		t.Fatalf("got %v", err)
 	}
@@ -50,11 +50,9 @@ func TestProtocolMismatchSkipsKeychain(t *testing.T) {
 func TestCandidateFallback(t *testing.T) {
 	var attempted []string
 	calls := 0
-	err := unlock(
-		func() ([]storedPassphrase, error) {
-			return []storedPassphrase{{"committed", []byte("first")}, {"active", []byte("second")}}, nil
-		},
-		func(request []byte) (agentResponse, error) {
+	_, err := Unlock(
+		func() ([][]byte, error) { return [][]byte{[]byte("first"), []byte("second")}, nil },
+		func(request []byte) (Response, error) {
 			calls++
 			if calls == 1 {
 				return response(true, ptr(true), 1, 0), nil
@@ -62,7 +60,7 @@ func TestCandidateFallback(t *testing.T) {
 			var object map[string]any
 			json.Unmarshal(request, &object)
 			attempted = append(attempted, object["passphrase"].(string))
-			return agentResponse{OK: calls == 3}, nil
+			return Response{OK: calls == 3}, nil
 		})
 	if err != nil || strings.Join(attempted, ",") != "first,second" {
 		t.Fatalf("err=%v attempted=%v", err, attempted)
@@ -72,14 +70,14 @@ func TestCandidateFallback(t *testing.T) {
 func TestRejectedPassphraseIsRedacted(t *testing.T) {
 	secret := "do-not-print-this-passphrase"
 	calls := 0
-	err := unlock(
-		func() ([]storedPassphrase, error) { return []storedPassphrase{{"active", []byte(secret)}}, nil },
-		func([]byte) (agentResponse, error) {
+	_, err := Unlock(
+		func() ([][]byte, error) { return [][]byte{[]byte(secret)}, nil },
+		func([]byte) (Response, error) {
 			calls++
 			if calls == 1 {
 				return response(true, ptr(true), 1, 0), nil
 			}
-			return agentResponse{}, nil
+			return Response{}, nil
 		})
 	if err == nil || strings.Contains(err.Error(), secret) || !strings.Contains(err.Error(), "agent rejected") {
 		t.Fatalf("got %v", err)
@@ -91,7 +89,7 @@ func TestRejectedPassphraseIsRedacted(t *testing.T) {
 
 func TestSocketBounds(t *testing.T) {
 	t.Setenv("GHTKN_AGENT_SOCKET", strings.Repeat("a", 1024))
-	if _, err := send(statusRequest()); err == nil || !strings.Contains(err.Error(), "path is too long") {
+	if _, err := Send(StatusRequest()); err == nil || !strings.Contains(err.Error(), "path is too long") {
 		t.Fatalf("got %v", err)
 	}
 	if _, err := readLine(bytes.NewReader(bytes.Repeat([]byte("a"), 1<<20+1))); err == nil ||

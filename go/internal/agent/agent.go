@@ -1,4 +1,5 @@
-package main
+// Package agent speaks protocol v1 of ghtkn's newline-delimited JSON agent protocol.
+package agent
 
 import (
 	"encoding/json"
@@ -15,7 +16,7 @@ import (
 
 const protocolVersion = 1
 
-type agentResponse struct {
+type Response struct {
 	OK                  bool  `json:"ok"`
 	Locked              *bool `json:"locked"`
 	RefreshTokenEnabled *bool `json:"refresh_token_enabled"`
@@ -23,54 +24,55 @@ type agentResponse struct {
 	MinProtocolVersion  *int  `json:"min_protocol_version"`
 }
 
-type storedPassphrase struct {
-	service string
-	data    []byte
+type Result struct {
+	AlreadyUnlocked     bool
+	RefreshTokenEnabled bool
 }
 
-func unlock(loadCandidates func() ([]storedPassphrase, error), send func([]byte) (agentResponse, error)) error {
-	status, err := send(statusRequest())
+// Unlock loads candidate passphrases only when the agent is locked, tries them in
+// order, and zeroes them afterwards. Agent errors are not relayed because an
+// untrusted socket could reflect a passphrase.
+func Unlock(load func() ([][]byte, error), send func([]byte) (Response, error)) (Result, error) {
+	status, err := send(StatusRequest())
 	if err != nil {
-		return err
+		return Result{}, err
 	}
 	if !status.OK {
-		return errors.New("query the ghtkn agent: request rejected")
+		return Result{}, errors.New("query the ghtkn agent: request rejected")
 	}
 	if err := checkProtocol(status); err != nil {
-		return err
+		return Result{}, err
 	}
 	if status.Locked == nil || !*status.Locked {
 		enabled := status.RefreshTokenEnabled != nil && *status.RefreshTokenEnabled
-		fmt.Fprintf(os.Stderr, "ghtkn agent is already unlocked; refresh_token_enabled=%t\n", enabled)
-		return nil
+		return Result{AlreadyUnlocked: true, RefreshTokenEnabled: enabled}, nil
 	}
 
-	candidates, err := loadCandidates()
+	candidates, err := load()
 	if err != nil {
-		return err
+		return Result{}, err
 	}
 	defer func() {
 		for _, c := range candidates {
-			clear(c.data)
+			clear(c)
 		}
 	}()
 
 	for _, c := range candidates {
-		request := unlockRequest(c.data)
+		request := unlockRequest(c)
 		response, err := send(request)
 		clear(request)
 		if err != nil {
-			return err
+			return Result{}, err
 		}
 		if response.OK {
-			fmt.Fprintln(os.Stderr, "ghtkn agent unlocked; refresh_token_enabled=true")
-			return nil
+			return Result{RefreshTokenEnabled: true}, nil
 		}
 	}
-	return errors.New("unlock the ghtkn agent: agent rejected the passphrase")
+	return Result{}, errors.New("unlock the ghtkn agent: agent rejected the passphrase")
 }
 
-func checkProtocol(r agentResponse) error {
+func checkProtocol(r Response) error {
 	minimum := 0
 	if r.MinProtocolVersion != nil {
 		minimum = *r.MinProtocolVersion
@@ -81,7 +83,7 @@ func checkProtocol(r agentResponse) error {
 	return nil
 }
 
-func statusRequest() []byte {
+func StatusRequest() []byte {
 	return []byte(`{"command":"STATUS","protocol_version":1}` + "\n")
 }
 
@@ -120,7 +122,8 @@ func appendJSONString(data, value []byte) []byte {
 	return append(data, '"')
 }
 
-func socketPath() string {
+// SocketPath follows ghtkn's lookup order.
+func SocketPath() string {
 	if path := os.Getenv("GHTKN_AGENT_SOCKET"); path != "" {
 		return path
 	}
@@ -134,9 +137,9 @@ func socketPath() string {
 	return filepath.Join(home, ".cache/ghtkn/agent.sock")
 }
 
-func send(request []byte) (agentResponse, error) {
-	var response agentResponse
-	path := socketPath()
+func Send(request []byte) (Response, error) {
+	var response Response
+	path := SocketPath()
 	if len(path) >= len(unix.RawSockaddrUnix{}.Path) {
 		return response, fmt.Errorf("ghtkn agent socket path is too long: %s", path)
 	}

@@ -1,6 +1,6 @@
 //go:build integration
 
-package main
+package ghtkn_test
 
 import (
 	"os"
@@ -8,10 +8,13 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/yokonao/ghtkn-touchid/go/internal/agent"
+	"github.com/yokonao/ghtkn-touchid/go/internal/ghtkn"
 )
 
 func TestGhtknIntegration(t *testing.T) {
-	ghtkn, err := ghtknExecutable()
+	path, err := ghtkn.Executable()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -28,17 +31,17 @@ func TestGhtknIntegration(t *testing.T) {
 	t.Setenv("GHTKN_AGENT_TOKEN_DIR", filepath.Join(root, "tokens"))
 
 	passphrase := []byte("ghtkn-touchid-integration")
-	if status, err := runGhtknReset(ghtkn, passphrase); err != nil || status != 0 {
+	if status, err := ghtkn.ResetAgent(path, passphrase); err != nil || status != 0 {
 		t.Fatalf("ghtkn agent reset: status=%d err=%v", status, err)
 	}
 
-	agent := exec.Command(ghtkn, "agent", "start")
-	if err := agent.Start(); err != nil {
+	agentCmd := exec.Command(path, "agent", "start")
+	if err := agentCmd.Start(); err != nil {
 		t.Fatal(err)
 	}
 	defer func() {
-		agent.Process.Kill()
-		agent.Wait()
+		agentCmd.Process.Kill()
+		agentCmd.Wait()
 	}()
 	for i := 0; ; i++ {
 		if _, err := os.Stat(socket); err == nil {
@@ -50,19 +53,17 @@ func TestGhtknIntegration(t *testing.T) {
 		time.Sleep(50 * time.Millisecond)
 	}
 
-	status, err := send(statusRequest())
+	status, err := agent.Send(agent.StatusRequest())
 	if err != nil || !status.OK || status.Locked == nil || !*status.Locked {
 		t.Fatalf("a freshly reset ghtkn agent was not locked: %+v %v", status, err)
 	}
-	err = unlock(
-		func() ([]storedPassphrase, error) {
-			return []storedPassphrase{{"integration", append([]byte(nil), passphrase...)}}, nil
-		},
-		send)
+	_, err = agent.Unlock(
+		func() ([][]byte, error) { return [][]byte{append([]byte(nil), passphrase...)}, nil },
+		agent.Send)
 	if err != nil {
 		t.Fatal(err)
 	}
-	status, err = send(statusRequest())
+	status, err = agent.Send(agent.StatusRequest())
 	if err != nil || !status.OK || (status.Locked != nil && *status.Locked) {
 		t.Fatalf("the ghtkn agent was still locked after unlock: %+v %v", status, err)
 	}
