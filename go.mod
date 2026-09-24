@@ -13,3 +13,6 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.9 // indirect
 )
+
+// Shipped the old Swift build output, which made the module ~141MB.
+retract [v0.3.0, v0.3.1]

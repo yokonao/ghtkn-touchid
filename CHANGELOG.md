@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.3.2 - 2026-09-25
+
+### Fixed
+
+- v0.3.0 and v0.3.1 accidentally included the old Swift build output, which made the Go module about 141MB; both are retracted. The binaries on GitHub Releases were not affected.
+
 ## v0.3.1 - 2026-09-25
 
 ### Added
