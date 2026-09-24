@@ -5,7 +5,7 @@
 ## Requirements
 
 - macOS 13 or later with Touch ID
-- Swift 5.9 or later
+- Go 1.27.1 or later and the Xcode Command Line Tools (for cgo)
 - ghtkn v0.3.4–v0.4.0 configured with the agent backend, available in an absolute `PATH` entry — see [Testing against ghtkn](#testing-against-ghtkn)
 
 The helper implements [protocol v1](https://github.com/suzuki-shunsuke/ghtkn-go-sdk/blob/main/ghtkn/backend/agent/protocol.go) of ghtkn's public newline-delimited JSON agent protocol, and follows ghtkn's socket lookup order: `GHTKN_AGENT_SOCKET`, `XDG_RUNTIME_DIR`, `XDG_CACHE_HOME`, then `~/.cache/ghtkn/agent.sock`.
@@ -19,24 +19,13 @@ brew tap yokonao/ghtkn-touchid https://github.com/yokonao/ghtkn-touchid
 brew install yokonao/ghtkn-touchid/ghtkn-touchid
 ```
 
-To build from a checkout instead, run `make build` and `make test`, then `./install.sh` to write the binary to `~/.local/bin`. The reset grants Keychain access to the binary that runs it, so moving it afterward makes macOS ask for permission until the reset runs again.
+To build from a checkout instead, run `go build ./cmd/ghtkn-touchid` and `go test ./...`. The reset grants Keychain access to the binary that runs it, so moving it afterward makes macOS ask for permission until the reset runs again.
 
 ## Testing against ghtkn
 
-`make test-integration GHTKN_VERSION=vX.Y.Z` downloads that ghtkn release from GitHub Releases and drives it, isolated from any real agent, through `agent reset` → `agent start` → `agent unlock` using this helper's actual protocol code (Keychain and Touch ID are not involved). Omitting `GHTKN_VERSION` uses whatever `ghtkn` is already on `PATH`.
+`GHTKN_VERSION=vX.Y.Z go test -tags integration ./...` downloads that ghtkn release from GitHub Releases and drives it, isolated from any real agent, through `agent reset` → `agent start` → `agent unlock` using this helper's actual protocol code (Keychain and Touch ID are not involved). Omitting `GHTKN_VERSION` uses whatever `ghtkn` is already on `PATH`.
 
 Checked against every release from v0.1.0 through v0.4.0: v0.3.4–v0.4.0 pass; v0.2.5–v0.3.3 speak an older agent protocol version this helper rejects; v0.1.0–v0.2.4 predate `agent reset`/`agent start` entirely. Run it against a new release before widening the range above.
-
-## Go implementation
-
-`go/` holds an experimental port of the same helper in Go, using cobra for the CLI and cgo for Keychain (C) and Touch ID (Objective-C). It uses the same Keychain items, but the access list trusts only the build that ran the reset, so the other one triggers a macOS permission prompt.
-
-```sh
-cd go
-go build -o ghtkn-touchid ./cmd/ghtkn-touchid
-go test ./...
-go test -tags integration ./...   # needs ghtkn on PATH
-```
 
 ## Unlock
 
