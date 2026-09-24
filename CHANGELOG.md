@@ -5,7 +5,7 @@
 ### Changed
 
 - **Breaking:** The helper is now written in Go, and the Swift implementation is gone. It uses the same Keychain items and command line.
-- **Breaking:** Homebrew is no longer supported. Install with `go install github.com/yokonao/ghtkn-touchid/cmd/ghtkn-touchid@latest`, which needs Go 1.27.1 or later and the Xcode Command Line Tools.
+- **Breaking:** Homebrew is no longer supported. Install with `go install github.com/yokonao/ghtkn-touchid/cmd/ghtkn-touchid@latest`, which needs Go 1.27.1 or later. The binary no longer needs cgo.
 - `make test-integration GHTKN_VERSION=vX.Y.Z` is now `GHTKN_VERSION=vX.Y.Z go test -tags integration ./...`.
 
 ### Upgrading

@@ -5,7 +5,7 @@
 ## Requirements
 
 - macOS 13 or later with Touch ID
-- Go 1.27.1 or later and the Xcode Command Line Tools (for cgo)
+- Go 1.27.1 or later
 - ghtkn v0.3.4–v0.4.0 configured with the agent backend, available in an absolute `PATH` entry — see [Testing against ghtkn](#testing-against-ghtkn)
 
 The helper implements [protocol v1](https://github.com/suzuki-shunsuke/ghtkn-go-sdk/blob/main/ghtkn/backend/agent/protocol.go) of ghtkn's public newline-delimited JSON agent protocol, and follows ghtkn's socket lookup order: `GHTKN_AGENT_SOCKET`, `XDG_RUNTIME_DIR`, `XDG_CACHE_HOME`, then `~/.cache/ghtkn/agent.sock`.
