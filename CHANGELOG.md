@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.3.0 - 2026-09-24
+
+### Changed
+
+- **Breaking:** The helper is now written in Go, and the Swift implementation is gone. It uses the same Keychain items and command line.
+- **Breaking:** Homebrew is no longer supported. Install with `go install github.com/yokonao/ghtkn-touchid/cmd/ghtkn-touchid@latest`, which needs Go 1.27.1 or later and the Xcode Command Line Tools.
+- `make test-integration GHTKN_VERSION=vX.Y.Z` is now `GHTKN_VERSION=vX.Y.Z go test -tags integration ./...`.
+
+### Upgrading
+
+Remove the Homebrew install with `brew uninstall ghtkn-touchid && brew untap yokonao/ghtkn-touchid`, then install with `go install`. The stored passphrase keeps working; no reset is needed. macOS asks once for permission to use the Keychain item from the new binary. Approve it, or run `ghtkn-touchid reset` to rewrite the access list for the new binary.
+
 ## v0.2.0 - 2026-09-23
 
 ### Changed
