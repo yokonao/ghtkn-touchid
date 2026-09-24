@@ -12,14 +12,13 @@ The helper implements [protocol v1](https://github.com/suzuki-shunsuke/ghtkn-go-
 
 ## Install
 
-This repository is also its own Homebrew tap, so the formula is tapped from the repository URL:
-
 ```sh
-brew tap yokonao/ghtkn-touchid https://github.com/yokonao/ghtkn-touchid
-brew install yokonao/ghtkn-touchid/ghtkn-touchid
+go install github.com/yokonao/ghtkn-touchid/cmd/ghtkn-touchid@latest
 ```
 
-To build from a checkout instead, run `go build ./cmd/ghtkn-touchid` and `go test ./...`. The reset grants Keychain access to the binary that runs it, so moving it afterward makes macOS ask for permission until the reset runs again.
+The binary lands in `$(go env GOBIN)`, or `~/go/bin` when that is unset. The reset grants Keychain access to the binary that runs it, so an upgraded or moved binary makes macOS ask for permission until the reset runs again.
+
+To build from a checkout instead, run `go build ./cmd/ghtkn-touchid` and `go test ./...`.
 
 ## Testing against ghtkn
 
