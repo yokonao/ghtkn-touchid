@@ -4,6 +4,7 @@ go 1.27.1
 
 require (
 	github.com/creack/pty v1.1.24
+	github.com/ebitengine/purego v0.11.1
 	github.com/spf13/cobra v1.10.2
 	golang.org/x/sys v0.48.0
 )
