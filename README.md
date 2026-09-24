@@ -5,18 +5,13 @@
 ## Requirements
 
 - macOS 13 or later with Touch ID
-- Go 1.27.1 or later
 - ghtkn v0.3.4–v0.4.0 configured with the agent backend, available in an absolute `PATH` entry — see [Testing against ghtkn](#testing-against-ghtkn)
 
 The helper implements [protocol v1](https://github.com/suzuki-shunsuke/ghtkn-go-sdk/blob/main/ghtkn/backend/agent/protocol.go) of ghtkn's public newline-delimited JSON agent protocol, and follows ghtkn's socket lookup order: `GHTKN_AGENT_SOCKET`, `XDG_RUNTIME_DIR`, `XDG_CACHE_HOME`, then `~/.cache/ghtkn/agent.sock`.
 
 ## Install
 
-```sh
-go install github.com/yokonao/ghtkn-touchid/cmd/ghtkn-touchid@latest
-```
-
-The binary lands in `$(go env GOBIN)`, or `~/go/bin` when that is unset. The reset grants Keychain access to the binary that runs it, so an upgraded or moved binary makes macOS ask for permission until the reset runs again.
+Download a binary from [GitHub Releases](https://github.com/yokonao/ghtkn-touchid/releases), or run `go install github.com/yokonao/ghtkn-touchid/cmd/ghtkn-touchid@latest`. See [docs/install.md](docs/install.md) for the details and how to verify a release.
 
 To build from a checkout instead, run `go build ./cmd/ghtkn-touchid` and `go test ./...`.
 

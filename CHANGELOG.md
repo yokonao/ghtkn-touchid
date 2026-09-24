@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Prebuilt darwin/amd64 and darwin/arm64 binaries on GitHub Releases, with build provenance attestations. See [docs/install.md](docs/install.md).
+
 ## v0.3.0 - 2026-09-25
 
 ### Changed
