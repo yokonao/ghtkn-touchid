@@ -4,4 +4,4 @@ package touchid
 
 import "testing"
 
-func TestManual(t *testing.T) { t.Log(Authenticate("purego manual test")) }
+func TestManual(t *testing.T) { t.Log(Authenticate("manual test")) }
