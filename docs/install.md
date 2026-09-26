@@ -40,8 +40,6 @@ With [mise](https://mise.jdx.dev/):
 mise use -g github:yokonao/ghtkn-touchid
 ```
 
-mise installs each version under its own path, so every upgrade needs `ghtkn-touchid reset` again.
-
 ## go install
 
 With Go 1.27.1 or later:
