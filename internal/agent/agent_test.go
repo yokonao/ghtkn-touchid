@@ -58,7 +58,7 @@ func TestCandidateFallback(t *testing.T) {
 				return response(true, ptr(true), 1, 0), nil
 			}
 			var object map[string]any
-			json.Unmarshal(request, &object)
+			_ = json.Unmarshal(request, &object)
 			attempted = append(attempted, object["passphrase"].(string))
 			return Response{OK: calls == 3}, nil
 		})

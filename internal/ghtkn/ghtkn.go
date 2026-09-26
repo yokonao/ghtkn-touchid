@@ -35,17 +35,17 @@ func ResetAgent(ghtkn string, passphrase []byte) (int, error) {
 	if err != nil {
 		return 0, fmt.Errorf("start ghtkn: %w", err)
 	}
-	defer master.Close()
+	defer func() { _ = master.Close() }()
 	fd := int(master.Fd())
 	pid := cmd.Process.Pid
 
 	status, err := feedPassphrase(fd, pid, passphrase)
 	if err != nil {
-		unix.Kill(pid, unix.SIGTERM)
+		_ = unix.Kill(pid, unix.SIGTERM)
 		// A session leader blocks in its exit path until the terminal output queue is
 		// drained, so read the rest of it before waiting for the child.
-		drainPTY(fd)
-		waitForChild(pid)
+		_ = drainPTY(fd)
+		_, _ = waitForChild(pid)
 		return 0, err
 	}
 	if status != nil {

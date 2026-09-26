@@ -11,8 +11,8 @@ func TestRoundTrip(t *testing.T) {
 	item := Item{Service: fmt.Sprintf("ghtkn-touchid.test.%d", os.Getpid()), Account: "test"}
 	renamed := item.Service + ".renamed"
 	t.Cleanup(func() {
-		Delete(item)
-		Delete(Item{Service: renamed, Account: item.Account})
+		_ = Delete(item)
+		_ = Delete(Item{Service: renamed, Account: item.Account})
 	})
 
 	if data, err := Read(item); data != nil || err != nil {

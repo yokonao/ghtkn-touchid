@@ -20,10 +20,10 @@ func reset(stdin *os.File, stderr io.Writer) error {
 	if _, err := unix.IoctlGetTermios(int(stdin.Fd()), unix.TIOCGETA); err != nil {
 		return errors.New("reset requires a terminal")
 	}
-	fmt.Fprint(stderr, "This deletes the ghtkn agent key and all cached tokens. Type RESET to continue: ")
+	_, _ = fmt.Fprint(stderr, "This deletes the ghtkn agent key and all cached tokens. Type RESET to continue: ")
 	answer, _ := bufio.NewReader(stdin).ReadString('\n')
 	if strings.TrimSuffix(answer, "\n") != "RESET" {
-		fmt.Fprintln(stderr, "Canceled.")
+		_, _ = fmt.Fprintln(stderr, "Canceled.")
 		return nil
 	}
 
@@ -41,11 +41,11 @@ func reset(stdin *os.File, stderr io.Writer) error {
 	}
 	err = performReset(func() (int, error) { return ghtkn.ResetAgent(path, secret) }, passphrase.Commit)
 	if errors.Is(err, passphrase.ErrKeptCommitted) {
-		fmt.Fprintf(stderr, "warning: %v\n", err)
+		_, _ = fmt.Fprintf(stderr, "warning: %v\n", err)
 	} else if err != nil {
 		return err
 	}
-	fmt.Fprintln(stderr, "Reset the ghtkn agent with a generated passphrase. Start and unlock the agent.")
+	_, _ = fmt.Fprintln(stderr, "Reset the ghtkn agent with a generated passphrase. Start and unlock the agent.")
 	return nil
 }
 

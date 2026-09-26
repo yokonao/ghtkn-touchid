@@ -14,9 +14,9 @@ func unlock(stderr io.Writer) error {
 		return err
 	}
 	if result.AlreadyUnlocked {
-		fmt.Fprintf(stderr, "ghtkn agent is already unlocked; refresh_token_enabled=%t\n", result.RefreshTokenEnabled)
+		_, _ = fmt.Fprintf(stderr, "ghtkn agent is already unlocked; refresh_token_enabled=%t\n", result.RefreshTokenEnabled)
 	} else {
-		fmt.Fprintln(stderr, "ghtkn agent unlocked; refresh_token_enabled=true")
+		_, _ = fmt.Fprintln(stderr, "ghtkn agent unlocked; refresh_token_enabled=true")
 	}
 	return nil
 }

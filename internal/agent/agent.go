@@ -147,7 +147,7 @@ func Send(request []byte) (Response, error) {
 	if err != nil {
 		return response, fmt.Errorf("connect to the ghtkn agent: %w", errors.Unwrap(err))
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 	if err := conn.SetDeadline(time.Now().Add(10 * time.Second)); err != nil {
 		return response, fmt.Errorf("configure the ghtkn agent socket: %w", err)
 	}
