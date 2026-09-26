@@ -1,7 +1,7 @@
-// Package keychain stores generic passwords in the default (login) Keychain with
-// an access list that trusts only the running binary. That Keychain needs no
-// keychain-access-groups entitlement, which ad-hoc signed binaries cannot carry.
-// Its APIs are all deprecated, but it is the only one usable without it.
+// Package keychain stores generic passwords in the login Keychain, where
+// SecItemAdd's default access list trusts only the running binary. That Keychain
+// needs no keychain-access-groups entitlement, which ad-hoc signed binaries
+// cannot carry.
 package keychain
 
 import (
@@ -10,7 +10,6 @@ import (
 	"maps"
 
 	"github.com/yokonao/appleframeworks/security"
-	"github.com/yokonao/appleframeworks/security/legacy"
 )
 
 type Item struct {
@@ -18,29 +17,19 @@ type Item struct {
 	Account string
 }
 
-// query matches the item in the default Keychain.
-func query(item Item, extra security.Attrs) (security.Attrs, error) {
-	keychain, err := legacy.DefaultKeychain()
-	if err != nil {
-		return nil, err
-	}
+func query(item Item, extra security.Attrs) security.Attrs {
 	q := security.Attrs{
 		security.Class:       security.ClassGenericPassword,
 		security.AttrService: item.Service,
 		security.AttrAccount: item.Account,
-		security.UseKeychain: keychain,
 	}
 	maps.Copy(q, extra)
-	return q, nil
+	return q
 }
 
 // Read returns nil without an error when the item does not exist.
 func Read(item Item) ([]byte, error) {
-	q, err := query(item, security.Attrs{security.ReturnData: true, security.MatchLimit: security.MatchLimitOne})
-	var data any
-	if err == nil {
-		data, err = security.CopyMatching(q)
-	}
+	data, err := security.CopyMatching(query(item, security.Attrs{security.ReturnData: true, security.MatchLimit: security.MatchLimitOne}))
 	if errors.Is(err, security.ErrItemNotFound) {
 		return nil, nil
 	}
@@ -53,26 +42,9 @@ func Read(item Item) ([]byte, error) {
 	return data.([]byte), nil
 }
 
-// Upsert writes the value and resets the access list to the running binary.
-func Upsert(item Item, value []byte) error {
-	err := func() error {
-		access, err := legacy.NewAccess("ghtkn agent passphrase")
-		if err != nil {
-			return err
-		}
-		attrs := security.Attrs{security.ValueData: value, security.AttrAccess: access}
-		q, err := query(item, nil)
-		if err != nil {
-			return err
-		}
-		err = security.Update(q, attrs)
-		if errors.Is(err, security.ErrItemNotFound) {
-			maps.Copy(q, attrs)
-			_, err = security.Add(q)
-		}
-		return err
-	}()
-	if err != nil {
+// Add stores a new item.
+func Add(item Item, value []byte) error {
+	if _, err := security.Add(query(item, security.Attrs{security.ValueData: value})); err != nil {
 		return fmt.Errorf("store %s in Keychain: %w", item.Service, err)
 	}
 	return nil
@@ -80,11 +52,7 @@ func Upsert(item Item, value []byte) error {
 
 // Delete succeeds when the item does not exist.
 func Delete(item Item) error {
-	q, err := query(item, nil)
-	if err == nil {
-		err = security.Delete(q)
-	}
-	if err != nil && !errors.Is(err, security.ErrItemNotFound) {
+	if err := security.Delete(query(item, nil)); err != nil && !errors.Is(err, security.ErrItemNotFound) {
 		return fmt.Errorf("remove %s from Keychain: %w", item.Service, err)
 	}
 	return nil
@@ -92,11 +60,7 @@ func Delete(item Item) error {
 
 // Rename moves the item to another service under the same account.
 func Rename(item Item, service string) error {
-	q, err := query(item, nil)
-	if err == nil {
-		err = security.Update(q, security.Attrs{security.AttrService: service})
-	}
-	if err != nil {
+	if err := security.Update(query(item, nil), security.Attrs{security.AttrService: service}); err != nil {
 		return fmt.Errorf("rename %s to %s in Keychain: %w", item.Service, service, err)
 	}
 	return nil

@@ -80,7 +80,7 @@ func Stage(passphrase []byte) error {
 	if err := keychain.Delete(i.pending); err != nil {
 		return err
 	}
-	return keychain.Upsert(i.pending, passphrase)
+	return keychain.Add(i.pending, passphrase)
 }
 
 // Commit promotes the pending passphrase to active. An error wrapping

@@ -18,8 +18,7 @@ func TestRoundTrip(t *testing.T) {
 	if data, err := Read(item); data != nil || err != nil {
 		t.Fatalf("Read of a missing item = %q, %v", data, err)
 	}
-	// Only the add path: updating an item's access list takes securityd ~20s.
-	if err := Upsert(item, []byte("secret")); err != nil {
+	if err := Add(item, []byte("secret")); err != nil {
 		t.Fatal(err)
 	}
 	if data, err := Read(item); string(data) != "secret" || err != nil {

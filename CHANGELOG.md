@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Keychain access no longer uses the deprecated SecKeychain and SecAccess APIs. New items get macOS's default access list, which trusts only the binary that ran the reset, as before.
+
+### Upgrading
+
+The stored passphrase keeps working; no reset is needed.
+
 ## v0.3.2 - 2026-09-25
 
 ### Fixed
