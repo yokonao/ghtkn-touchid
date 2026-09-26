@@ -3,8 +3,8 @@
 ghtkn-touchid is a single binary for macOS. Install it into a directory in your `PATH` in one of these ways:
 
 1. [GitHub Releases](#github-releases)
-1. [go install](#go-install)
 1. [mise](#mise)
+1. [go install](#go-install)
 
 The reset grants Keychain access to the binary that runs it, so an upgraded or moved binary makes macOS ask for permission until the reset runs again. A fresh install has no passphrase yet; run `ghtkn-touchid reset` once before the first unlock.
 
@@ -32,16 +32,6 @@ gh attestation verify "$asset" \
   --signer-workflow yokonao/ghtkn-touchid/.github/workflows/release.yaml
 ```
 
-## go install
-
-With Go 1.27.1 or later:
-
-```sh
-go install github.com/yokonao/ghtkn-touchid/cmd/ghtkn-touchid@latest
-```
-
-The binary lands in `$(go env GOBIN)`, or `~/go/bin` when that is unset.
-
 ## mise
 
 With [mise](https://mise.jdx.dev/):
@@ -51,3 +41,13 @@ mise use -g github:yokonao/ghtkn-touchid
 ```
 
 mise installs each version under its own path, so every upgrade needs `ghtkn-touchid reset` again.
+
+## go install
+
+With Go 1.27.1 or later:
+
+```sh
+go install github.com/yokonao/ghtkn-touchid/cmd/ghtkn-touchid@latest
+```
+
+The binary lands in `$(go env GOBIN)`, or `~/go/bin` when that is unset.
