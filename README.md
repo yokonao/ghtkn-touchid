@@ -25,7 +25,7 @@ Checked against every release from v0.1.0 through v0.4.0: v0.3.4–v0.4.0 pass; 
 
 ```sh
 ghtkn agent start &
-ghtkn-touchid
+ghtkn-touchid unlock
 ```
 
 Each unlock from the locked state requires Touch ID. If the agent is already unlocked, it does not access Keychain.

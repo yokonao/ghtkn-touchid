@@ -8,12 +8,9 @@ import (
 )
 
 func main() {
-	unlockCmd := func(*cobra.Command, []string) error { return unlock(os.Stderr) }
 	root := &cobra.Command{
 		Use:           "ghtkn-touchid",
 		Short:         "Unlock a local ghtkn agent with a Touch ID-protected passphrase",
-		Args:          cobra.NoArgs,
-		RunE:          unlockCmd,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
@@ -21,9 +18,9 @@ func main() {
 	root.AddCommand(
 		&cobra.Command{
 			Use:   "unlock",
-			Short: "Unlock the ghtkn agent (default)",
+			Short: "Unlock the ghtkn agent",
 			Args:  cobra.NoArgs,
-			RunE:  unlockCmd,
+			RunE:  func(*cobra.Command, []string) error { return unlock(os.Stderr) },
 		},
 		&cobra.Command{
 			Use:   "reset",

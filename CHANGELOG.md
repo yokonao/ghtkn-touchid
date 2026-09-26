@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- **Breaking:** `ghtkn-touchid` with no arguments no longer unlocks; it prints help. Run `ghtkn-touchid unlock` instead.
+
 ## v0.3.3 - 2026-09-26
 
 ### Changed
