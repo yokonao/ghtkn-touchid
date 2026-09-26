@@ -1,9 +1,10 @@
 # Changelog
 
-## Unreleased
+## v0.3.3 - 2026-09-26
 
 ### Changed
 
+- Touch ID and Keychain are called through [appleframeworks](https://github.com/yokonao/appleframeworks) instead of purego directly.
 - Keychain access no longer uses the deprecated SecKeychain and SecAccess APIs. New items get macOS's default access list, which trusts only the binary that ran the reset, as before.
 
 ### Upgrading
