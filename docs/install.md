@@ -40,6 +40,8 @@ With [mise](https://mise.jdx.dev/):
 mise use -g github:yokonao/ghtkn-touchid
 ```
 
+mise verifies the [build provenance attestation](#verify-the-archive) automatically.
+
 ## go install
 
 With Go 1.27.1 or later:
