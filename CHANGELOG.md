@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `--version` prints the version.
+
 ## v0.4.0 - 2026-09-26
 
 ### Changed
