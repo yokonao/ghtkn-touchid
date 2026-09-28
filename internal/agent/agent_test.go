@@ -7,8 +7,8 @@ import (
 	"testing"
 )
 
-func response(ok bool, locked *bool, version, minimum int) Response {
-	return Response{OK: ok, Locked: locked, ProtocolVersion: &version, MinProtocolVersion: &minimum}
+func response(locked *bool, version, minimum int) Response {
+	return Response{OK: true, Locked: locked, ProtocolVersion: &version, MinProtocolVersion: &minimum}
 }
 
 func ptr[T any](v T) *T { return &v }
@@ -31,7 +31,7 @@ func TestAlreadyUnlockedSkipsKeychain(t *testing.T) {
 			if !bytes.Equal(request, StatusRequest()) {
 				t.Fatal("status must come first")
 			}
-			return response(true, ptr(false), 1, 0), nil
+			return response(ptr(false), 1, 0), nil
 		})
 	if err != nil {
 		t.Fatal(err)
@@ -41,7 +41,7 @@ func TestAlreadyUnlockedSkipsKeychain(t *testing.T) {
 func TestProtocolMismatchSkipsKeychain(t *testing.T) {
 	_, err := Unlock(
 		func() ([][]byte, error) { t.Fatal("loaded Keychain"); return nil, nil },
-		func([]byte) (Response, error) { return response(true, ptr(true), 2, 2), nil })
+		func([]byte) (Response, error) { return response(ptr(true), 2, 2), nil })
 	if err == nil || err.Error() != "unsupported ghtkn agent protocol" {
 		t.Fatalf("got %v", err)
 	}
@@ -55,7 +55,7 @@ func TestCandidateFallback(t *testing.T) {
 		func(request []byte) (Response, error) {
 			calls++
 			if calls == 1 {
-				return response(true, ptr(true), 1, 0), nil
+				return response(ptr(true), 1, 0), nil
 			}
 			var object map[string]any
 			_ = json.Unmarshal(request, &object)
@@ -75,7 +75,7 @@ func TestRejectedPassphraseIsRedacted(t *testing.T) {
 		func([]byte) (Response, error) {
 			calls++
 			if calls == 1 {
-				return response(true, ptr(true), 1, 0), nil
+				return response(ptr(true), 1, 0), nil
 			}
 			return Response{}, nil
 		})
