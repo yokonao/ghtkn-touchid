@@ -5,7 +5,7 @@
 ## Requirements
 
 - macOS 13 or later with Touch ID
-- ghtkn v0.3.4–v0.4.0 configured with the agent backend, available in an absolute `PATH` entry — see [Testing against ghtkn](#testing-against-ghtkn)
+- ghtkn v0.3.4–v0.4.1 configured with the agent backend, available in an absolute `PATH` entry — see [Testing against ghtkn](#testing-against-ghtkn)
 
 The helper implements [protocol v1](https://github.com/suzuki-shunsuke/ghtkn-go-sdk/blob/main/ghtkn/backend/agent/protocol.go) of ghtkn's public newline-delimited JSON agent protocol, and follows ghtkn's socket lookup order: `GHTKN_AGENT_SOCKET`, `XDG_RUNTIME_DIR`, `XDG_CACHE_HOME`, then `~/.cache/ghtkn/agent.sock`.
 
@@ -26,7 +26,7 @@ golangci-lint fmt
 
 `GHTKN_VERSION=vX.Y.Z go test -tags integration ./...` downloads that ghtkn release from GitHub Releases and drives it, isolated from any real agent, through `agent reset` → `agent start` → `agent unlock` using this helper's actual protocol code (Keychain and Touch ID are not involved). Omitting `GHTKN_VERSION` uses whatever `ghtkn` is already on `PATH`.
 
-Checked against every release from v0.1.0 through v0.4.0: v0.3.4–v0.4.0 pass; v0.2.5–v0.3.3 speak an older agent protocol version this helper rejects; v0.1.0–v0.2.4 predate `agent reset`/`agent start` entirely. Run it against a new release before widening the range above.
+Checked against every release from v0.1.0 through v0.4.1: v0.3.4–v0.4.1 pass; v0.2.5–v0.3.3 speak an older agent protocol version this helper rejects; v0.1.0–v0.2.4 predate `agent reset`/`agent start` entirely. Run it against a new release before widening the range above.
 
 ## Unlock
 
