@@ -29,7 +29,7 @@ Each archive has a [build provenance attestation](https://docs.github.com/en/act
 ```sh
 gh attestation verify "$asset" \
   -R yokonao/ghtkn-touchid \
-  --signer-workflow yokonao/ghtkn-touchid/.github/workflows/release.yaml
+  --signer-workflow yokonao/ghtkn-touchid/.github/workflows/release.yml
 ```
 
 ## mise
