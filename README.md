@@ -11,7 +11,10 @@ The helper implements [protocol v1](https://github.com/suzuki-shunsuke/ghtkn-go-
 
 ## Install
 
-Download a binary from [GitHub Releases](https://github.com/yokonao/ghtkn-touchid/releases), run `mise use -g github:yokonao/ghtkn-touchid`, or run `go install github.com/yokonao/ghtkn-touchid/cmd/ghtkn-touchid@latest`. See [docs/install.md](docs/install.md) for the details and how to verify a release.
+Download a prebuilt binary from [GitHub Releases](https://github.com/yokonao/ghtkn-touchid/releases).
+Every release ships with a build provenance attestation.
+
+See [docs/install.md](docs/install.md) for other install methods and how to verify a release.
 
 ## Development
 
