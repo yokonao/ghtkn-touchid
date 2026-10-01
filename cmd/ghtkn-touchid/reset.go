@@ -10,11 +10,21 @@ import (
 	"os"
 	"strings"
 
+	"github.com/spf13/cobra"
 	"golang.org/x/sys/unix"
 
 	"github.com/yokonao/ghtkn-touchid/internal/ghtkn"
 	"github.com/yokonao/ghtkn-touchid/internal/passphrase"
 )
+
+func newResetCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "reset",
+		Short: "Reset the ghtkn agent with a new passphrase stored in Keychain",
+		Args:  cobra.NoArgs,
+		RunE:  func(*cobra.Command, []string) error { return reset(os.Stdin, os.Stderr) },
+	}
+}
 
 func reset(stdin *os.File, stderr io.Writer) error {
 	if _, err := unix.IoctlGetTermios(int(stdin.Fd()), unix.TIOCGETA); err != nil {
