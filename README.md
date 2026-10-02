@@ -75,7 +75,3 @@ This helper does not protect against:
 - physical access after successful biometric authentication.
 
 Reset resolves `ghtkn` from absolute entries in `PATH`; empty and relative entries are ignored. Keep the helper, the resolved ghtkn executable, and the socket directory writable only by the current user. Lock or stop the agent when it is not needed.
-
-## License
-
-MIT. ghtkn and ghtkn-go-sdk are separate MIT-licensed projects; their names identify compatibility only.
