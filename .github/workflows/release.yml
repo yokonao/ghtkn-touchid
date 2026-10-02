@@ -1,10 +1,14 @@
 # This workflow is managed by gh actions-lock.
 
-name: release
+name: Release
+
 on:
   push:
-    tags: ["v*"]
+    tags:
+      - "v*"
+
 permissions: {}
+
 jobs:
   release:
     runs-on: ubuntu-latest
