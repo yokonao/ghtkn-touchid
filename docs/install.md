@@ -44,8 +44,6 @@ mise verifies the [build provenance attestation](#verify-the-archive) automatica
 
 ## go install
 
-With Go 1.27.1 or later:
-
 ```sh
 go install github.com/yokonao/ghtkn-touchid/cmd/ghtkn-touchid@latest
 ```
