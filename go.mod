@@ -6,7 +6,7 @@ require (
 	github.com/creack/pty v1.1.24
 	github.com/spf13/cobra v1.10.2
 	github.com/yokonao/appleframeworks v0.0.0-20260926010600-36cfbd03be84
-	golang.org/x/sys v0.48.0
+	golang.org/x/sys v0.49.0
 )
 
 require (
